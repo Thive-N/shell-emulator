@@ -1,5 +1,6 @@
 use crate::command_history::CommandHistory;
 use crate::left_prompt::LeftPrompt;
+use std::collections::HashMap;
 
 use std::io::stdin;
 use std::process::Command;
@@ -7,17 +8,25 @@ use std::process::Command;
 pub struct Shell {
     command_history: CommandHistory,
     left_prompt: LeftPrompt,
+    alias: HashMap<String, (String, Vec<String>)>,
 }
 impl Shell {
     pub fn default() -> Self {
         Shell {
             command_history: CommandHistory::default(),
             left_prompt: LeftPrompt::default(),
+            alias: HashMap::new(),
         }
     }
 
     pub async fn run(&mut self) {
         let current_dir = std::env::current_dir().unwrap();
+        self.alias
+            .insert("la".to_string(), ("ls".to_string(), vec!["-a".to_string()]));
+        self.alias.insert(
+            "lla".to_string(),
+            ("ls".to_string(), vec!["-la".to_string()]),
+        );
 
         loop {
             self.left_prompt.draw(current_dir.clone()).await;
@@ -26,7 +35,7 @@ impl Shell {
 
             let mut x = input.split(" ");
 
-            let command = x.next().unwrap().trim();
+            let mut command = x.next().unwrap().trim();
 
             let mut args: Vec<String> = vec![];
 
@@ -49,6 +58,12 @@ impl Shell {
             if command == "cd" {
                 println!("command not implemented");
                 continue;
+            }
+
+            if self.alias.contains_key(command) {
+                let temp = self.alias.get_key_value(command).unwrap();
+                command = &temp.1 .0;
+                args = temp.1 .1.clone();
             }
             let mut command_run = Command::new(command);
 

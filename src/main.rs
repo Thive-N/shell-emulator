@@ -1,10 +1,11 @@
 pub mod command_history;
 pub mod left_prompt;
-
+use tokio;
 mod shell;
 use shell::Shell;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut shell = Shell::default();
-    shell.run();
+    shell.run().await;
 }

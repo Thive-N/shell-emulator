@@ -21,7 +21,6 @@ impl Shell {
 
         loop {
             self.left_prompt.draw(current_dir.clone()).await;
-
             let mut input = String::new();
             stdin().read_line(&mut input).unwrap();
 
@@ -42,8 +41,15 @@ impl Shell {
                 }
             }
 
-            self.command_history.add(command.to_string(), args.clone());
+            if command == "" {
+                continue;
+            }
 
+            self.command_history.add(command.to_string(), args.clone());
+            if command == "cd" {
+                println!("command not implemented");
+                continue;
+            }
             let mut command_run = Command::new(command);
 
             if args.len() != 0 {

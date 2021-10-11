@@ -3,12 +3,14 @@ use crate::left_prompt::LeftPrompt;
 use std::collections::HashMap;
 
 use std::io::stdin;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub struct Shell {
     command_history: CommandHistory,
     left_prompt: LeftPrompt,
     alias: HashMap<String, (String, Vec<String>)>,
+    path: PathBuf,
 }
 impl Shell {
     pub fn default() -> Self {
@@ -16,11 +18,11 @@ impl Shell {
             command_history: CommandHistory::default(),
             left_prompt: LeftPrompt::default(),
             alias: HashMap::new(),
+            path: std::env::current_dir().unwrap(),
         }
     }
 
     pub async fn run(&mut self) {
-        let current_dir = std::env::current_dir().unwrap();
         self.alias
             .insert("la".to_string(), ("ls".to_string(), vec!["-a".to_string()]));
         self.alias.insert(
@@ -29,7 +31,7 @@ impl Shell {
         );
 
         loop {
-            self.left_prompt.draw(current_dir.clone()).await;
+            self.left_prompt.draw(self.path.clone()).await;
             let mut input = String::new();
             stdin().read_line(&mut input).unwrap();
 
@@ -56,7 +58,11 @@ impl Shell {
 
             self.command_history.add(command.to_string(), args.clone());
             if command == "cd" {
-                println!("command not implemented");
+                if Path::new(&args[0]).exists() {
+                    self.path = PathBuf::from(&args[0])
+                } else {
+                    println!("path doesnt exist")
+                }
                 continue;
             }
 
@@ -70,8 +76,9 @@ impl Shell {
             if args.len() != 0 {
                 command_run.args(args);
             }
+            command_run.current_dir(command);
 
-            if let Err(e) = command_run.status() {
+            if let Err(e) = command_run.spawn() {
                 println!("{}", e)
             }
         }

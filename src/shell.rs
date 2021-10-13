@@ -76,9 +76,11 @@ impl Shell {
             if args.len() != 0 {
                 command_run.args(args);
             }
-            command_run.current_dir(command);
 
-            if let Err(e) = command_run.spawn() {
+            command_run.current_dir(&self.path);
+
+            println!("{}{}", command, command.len());
+            if let Err(e) = command_run.status() {
                 println!("{}", e)
             }
         }

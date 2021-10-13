@@ -79,7 +79,6 @@ impl Shell {
 
             command_run.current_dir(&self.path);
 
-            println!("{}{}", command, command.len());
             if let Err(e) = command_run.status() {
                 println!("{}", e)
             }
